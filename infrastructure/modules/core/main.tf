@@ -1,42 +1,25 @@
 # Network, DNS, Security Groups
 
-resource "aws_vpc" "main" {
-  cidr_block = "${var.cidr}"
-  enable_dns_support = "${var.dns}"
-  enable_dns_hostnames = "${var.dnsh}"
+module "vpc" {
+  source = "terraform-aws-modules/vpc/aws"
+
+  name = "markup-vpc-${var.environment}"
+
+  # pass in per environment
+  cidr = "${var.cidr}"
+  azs = "${var.azs}"
+
+  private_subnets = "${var.private_subnets}"
+  public_subnets = "${var.public_subnets}"
+  database_subnets    = "${var.database_subnet}"
+
+  # single NAT gateway
+  enable_nat_gateway = true
+  single_nat_gateway = true
+  one_nat_gateway_per_az = false
 
   tags = {
-      Name = "main-vpc"
-      Environment = "${var.environment}"
+    Terraform = true
+    Environment = "${var.environment}"
   }
-}
-
-# public subnet for elb
-resource "aws_subnet" "public" {
-  vpc_id = "${aws_vpc.main.id}"
-  cidr_block = "${var.public_cidr}"
-
-  tags = {
-      Environment = "${var.environment}"
-  }
-}
-
-# private subnet for web servers
-resource "aws_subnet" "private_web" {
-    vpc_id = "${aws_vpc.main.id}"
-    cidr_block = "${var.private_web_cidr}"
-
-    tags = {
-      Environment = "${var.environment}"
-    }
-}
-
-#private subnet for database
-resource "aws_subnet" "private_db" {
-    vpc_id = "${aws_vpc.main.id}"
-    cidr_block = "${var.private_db_cidr}"
-
-    tags = {
-      Environment = "${var.environment}"
-    }
 }
